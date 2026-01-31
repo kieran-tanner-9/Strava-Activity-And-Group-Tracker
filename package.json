@@ -1,0 +1,20 @@
+{
+  "name": "strava-activity-tracker",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "build": "npm run build:css",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "build:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/styles.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/styles.css --watch"
+  },
+  "dependencies": {
+    "hono": "^4.11.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18",
+    "wrangler": "^4.61.1"
+  }
+}

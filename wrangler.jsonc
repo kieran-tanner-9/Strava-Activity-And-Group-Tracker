@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "strava-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-30",
+  
+  /* Serve the frontend files */
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./public"
+  },
+  
+  "observability": {
+    "enabled": true
+  },
+
+  /* --- DATABASE CONFIGURATION --- */
+  /* Run 'npx wrangler d1 create strava-db' to get your ID */
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "strava-db",
+      "database_id": "YOUR_DATABASE_ID_HERE"
+    }
+  ],
+}

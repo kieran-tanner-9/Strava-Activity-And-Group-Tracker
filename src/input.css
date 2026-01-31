@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* In Tailwind 4, the default is "native" dark mode 
+  (uses system preference), so no config is needed! 
+*/
+
+/* --- Custom Animations --- */
+@layer utilities {
+  .emoji-bike   { animation: bikeMove 2.4s infinite linear; display: inline-block; }
+  .emoji-run    { animation: runMove 1.8s infinite linear; display: inline-block; }
+  .emoji-swim   { animation: swimMove 2.3s infinite linear; display: inline-block; }
+  .emoji-walk   { animation: walkMove 2.7s infinite linear; display: inline-block; }
+}
+
+@keyframes bikeMove { 0%, 100% { transform: translateX(0);} 50% { transform: translateX(10px);} }
+@keyframes runMove { 0%, 100% { transform: scale(1);} 20% { transform: scale(1.13);} 40% { transform: scale(1);} 60% { transform: scale(1.09);} 80% { transform: scale(1);} }
+@keyframes swimMove { 0%, 100% { transform: rotate(-8deg);} 50% { transform: rotate(9deg);} }
+@keyframes walkMove { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(6px);} }
+
+/* --- Custom Styles --- */
+a.strava-link { font-weight: bold; color: #FC5200; }
+
+/* Trophy Card - updated for V4 compatibility */
+.trophy-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Native CSS Dark Mode Media Query */
+@media (prefers-color-scheme: dark) {
+  .trophy-card {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* Trophy Colors */
+.trophy-platinum { border-color: #e5e7eb; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #374151 !important; }
+.trophy-gold { border-color: #fbbf24; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e !important; }
+.trophy-silver { border-color: #9ca3af; background: linear-gradient(135deg, #f3f4f6, #d1d5db); color: #374151 !important; }
+.trophy-bronze { border-color: #d97706; background: linear-gradient(135deg, #fed7aa, #fdba74); color: #92400e !important; }
+
+@media (prefers-color-scheme: dark) {
+  .trophy-platinum { border-color: #6b7280; background: linear-gradient(135deg, #374151, #4b5563); color: #e5e7eb !important; }
+  .trophy-gold { border-color: #f59e0b; background: linear-gradient(135deg, #451a03, #78350f); color: #fcd34d !important; }
+  .trophy-silver { border-color: #6b7280; background: linear-gradient(135deg, #374151, #4b5563); color: #d1d5db !important; }
+  .trophy-bronze { border-color: #ea580c; background: linear-gradient(135deg, #431407, #7c2d12); color: #fdba74 !important; }
+}
+
+.trophy-icon { font-size: 2rem; margin-right: 0.5rem; }
+
+/* Progress Bars */
+.progress-platinum { background: linear-gradient(90deg, #f3f4f6, #e5e7eb); border: 1px solid #e5e7eb; }
+.progress-gold { background: linear-gradient(90deg, #fef3c7, #fde68a); border: 1px solid #fbbf24; }
+.progress-silver { background: linear-gradient(90deg, #f3f4f6, #d1d5db); border: 1px solid #9ca3af; }
+.progress-bronze { background: linear-gradient(90deg, #fed7aa, #fdba74); border: 1px solid #d97706; }
+.progress-toward-bronze { background: linear-gradient(90deg, #fed7aa, #fdba74); opacity: 0.8; }
+
+@media (prefers-color-scheme: dark) {
+  .progress-platinum { background: linear-gradient(90deg, #374151, #4b5563); border: 1px solid #6b7280; }
+  .progress-gold { background: linear-gradient(90deg, #451a03, #78350f); border: 1px solid #f59e0b; }
+  .progress-silver { background: linear-gradient(90deg, #374151, #4b5563); border: 1px solid #6b7280; }
+  .progress-bronze { background: linear-gradient(90deg, #431407, #7c2d12); border: 1px solid #ea580c; }
+  .progress-toward-bronze { background: linear-gradient(90deg, #431407, #7c2d12); opacity: 0.8; }
+}

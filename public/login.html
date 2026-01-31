@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-GB" class="h-full bg-gray-50 dark:bg-gray-900">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strava Activity Tracker - Login</title>
+  <link href="assets/styles.css" rel="stylesheet">
+</head>
+<body class="h-full flex flex-col min-h-screen bg-white dark:bg-gray-900 transition-colors">
+  <main class="flex-grow container mx-auto px-6 py-8 flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+      <div class="text-center">
+        <div class="flex justify-center mb-6">
+          <div class="flex gap-2 bg-[#5caa59] px-5 py-3 rounded-2xl shadow-md">
+            <span class="emoji-bike text-3xl md:text-4xl text-white">🚴‍♂️</span>
+            <span class="emoji-run text-3xl md:text-4xl text-white">🏃‍♂️</span>
+            <span class="emoji-swim text-3xl md:text-4xl text-white">🏊‍♂️</span>
+            <span class="emoji-walk text-3xl md:text-4xl text-white">🚶</span>
+          </div>
+        </div>
+        
+        <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+          Activity Tracker
+        </h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Connect your Strava account to join the club statistics.
+        </p>
+      </div>
+	  
+	        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
+        <div class="text-center">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Connect with Strava
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-6">
+            By connecting, you agree to share your public activity data for the purpose of club statistics.
+          </p>
+          <a href="/auth/login" 
+             class="w-full flex justify-center items-center px-6 py-3 border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fc4c02] transition-colors">
+            <img src="assets/img/btn_strava_connect_with_orange.png" alt="Connect with Strava"/>
+          </a>
+          <img src="assets/img/strava.png" alt="Powered by Strava" class="mx-auto mt-6 h-8 w-auto" />
+        </div>
+      </div>
+
+      <div class="text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Enter Any text you see fit here - "For now Train harder today than you did yesterday, so you can be better tomorrow"
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-[#43464f] dark:bg-gray-800 text-white text-center py-4 mt-auto">
+    &copy; <span id="currentYear"></span> ADD COMPANY/CLUB NAME HERE
+  </footer>
+
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

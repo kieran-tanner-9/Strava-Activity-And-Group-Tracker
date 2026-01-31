@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en-GB" class="h-full bg-gray-50 dark:bg-gray-900">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strava Activity Tracker</title>
+  
+  <link href="assets/styles.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body class="h-full flex flex-col min-h-screen bg-white dark:bg-gray-900 transition-colors">
+  <main class="flex-grow container mx-auto px-6 py-8">
+    <header class="mb-8 flex flex-col items-center justify-center">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex gap-2 bg-[#5caa59] px-5 py-3 rounded-2xl shadow-md">
+          <span class="emoji-bike text-3xl md:text-4xl text-white">🚴‍♂️</span>
+          <span class="emoji-run text-3xl md:text-4xl text-white">🏃‍♂️</span>
+          <span class="emoji-swim text-3xl md:text-4xl text-white">🏊‍♂️</span>
+          <span class="emoji-walk text-3xl md:text-4xl text-white">🚶</span>
+        </div>
+      </div>
+      <div class="text-center text-2xl md:text-3xl font-extrabold text-[#43464f] dark:text-white tracking-tight">
+        <span>Strava</span>
+        <span class="mx-2 text-[#5caa59] dark:text-[#5caa59] font-bold">|</span>
+        <span class="inline-block align-middle rounded-full bg-[#e5f4e3] dark:bg-[#263727] px-3 py-1 text-base md:text-lg font-bold text-[#5caa59] dark:text-[#a7ff99] tracking-wider shadow">
+          Activity Tracker
+        </span>
+      </div>
+      <div class="mt-2">
+        <a href="https://www.strava.com/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2">
+          <img src="assets/img/strava.png"  alt="Powered by Strava" class="h-6 dark:invert" />
+        </a>
+      </div>
+    </header>
+
+    <section class="mb-6 flex flex-wrap gap-4 items-center">
+      <label for="club" class="font-semibold text-[#5caa59] dark:text-[#5caa59]">Club:</label>
+      <select id="club" class="border border-[#43464f] dark:border-gray-600 rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5caa59]">
+        <option value="all">All</option>
+      </select>
+      <label for="month" class="font-semibold text-[#5caa59] dark:text-[#5caa59]">Month:</label>
+      <select id="month" class="border border-[#43464f] dark:border-gray-600 rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5caa59]">
+        <option value="all">All</option>
+        <option value="01">January</option><option value="02">February</option>
+        <option value="03">March</option><option value="04">April</option>
+        <option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option>
+        <option value="09">September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+      <label for="year" class="font-semibold text-[#5caa59] dark:text-[#5caa59]">Year:</label>
+      <select id="year" class="border border-[#43464f] dark:border-gray-600 rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5caa59]"></select>
+      
+      <div class="ml-auto flex gap-2 items-center">
+        <button id="exportExcel"
+          class="hidden bg-[#5caa59] text-white px-5 py-2 rounded shadow hover:bg-[#4a9447] transition font-semibold">
+          Export Excel
+        </button>
+
+        <button id="addManualActivity"
+          class="hidden bg-[#fc4c02] text-white px-5 py-2 rounded shadow hover:bg-[#e04302] transition font-semibold">
+          Add Manual Activity
+        </button>
+
+        <button id="forceSync"
+          class="hidden bg-red-600 text-white px-5 py-2 rounded shadow hover:bg-red-700 transition font-semibold">
+          Force Sync
+        </button>
+        <button id="adminTools"
+          class="hidden bg-gray-600 text-white px-5 py-2 rounded shadow hover:bg-gray-700 transition font-semibold">
+          Admin Tools
+        </button>
+      </div>
+    </section>
+    
+    <section id="trophySection" class="hidden mb-6">
+      <div class="trophy-card">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">
+          <span class="trophy-icon">🏆</span>
+          <span id="trophyClubName">Club</span> Annual Trophy Levels
+        </h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Trophy levels accumulate throughout the calendar year and reset each January. 
+          <span class="font-medium">Format:</span> Monthly miles / Yearly total miles
+        </p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="trophy-bronze text-center p-3 rounded-lg">
+            <div class="text-2xl">🥉</div>
+            <div class="font-semibold">Bronze</div>
+            <div id="bronzeTarget" class="text-sm">300 miles</div>
+          </div>
+          <div class="trophy-silver text-center p-3 rounded-lg">
+            <div class="text-2xl">🥈</div>
+            <div class="font-semibold">Silver</div>
+            <div id="silverTarget" class="text-sm">500 miles</div>
+          </div>
+          <div class="trophy-gold text-center p-3 rounded-lg">
+            <div class="text-2xl">🥇</div>
+            <div class="font-semibold">Gold</div>
+            <div id="goldTarget" class="text-sm">800 miles</div>
+          </div>
+          <div class="trophy-platinum text-center p-3 rounded-lg">
+            <div class="text-2xl">💎</div>
+            <div class="font-semibold">Platinum</div>
+            <div id="platinumTarget" class="text-sm">1000 miles</div>
+          </div>
+        </div>
+        <div id="athleteTrophyStatus" class="mt-4 space-y-2"></div>
+      </div>
+    </section>
+
+    <section class="bg-white dark:bg-gray-800 shadow rounded p-6 max-w-7xl mx-auto overflow-x-auto">
+      <canvas id="statsChart" class="mb-8"></canvas>
+      <table class="w-full border-collapse border border-[#43464f] dark:border-gray-600 text-sm">
+        <thead class="bg-[#43464f] dark:bg-gray-700 text-white">
+          <tr>
+            <th class="border border-[#43464f] dark:border-gray-600 px-3 py-2 text-left">Week commencing</th>
+            <th class="border border-[#43464f] dark:border-gray-600 px-3 py-2 text-left">Club</th>
+            <th class="border border-[#43464f] dark:border-gray-600 px-3 py-2 text-left">Athlete</th>
+            <th class="border border-[#43464f] dark:border-gray-600 px-3 py-2 text-right">Miles</th>
+            <th class="admin-col hidden border border-[#43464f] dark:border-gray-600 px-3 py-2 text-left">Activity</th>
+            <th class="admin-col hidden border border-[#43464f] dark:border-gray-600 px-3 py-2 text-left">Link</th>
+            <th class="admin-col hidden border border-[#43464f] dark:border-gray-600 px-3 py-2 text-center">Manual</th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody" class="text-gray-800 dark:text-gray-200"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <div id="manualActivityModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Manual Activity</h3>
+      <form id="manualActivityForm">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Athlete</label>
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <input type="radio" id="existingAthlete" name="athleteType" value="existing" checked class="text-[#5caa59]">
+              <label for="existingAthlete" class="text-sm text-gray-700 dark:text-gray-300">Select existing</label>
+            </div>
+            <select id="manualAthlete" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              <option value="">Select athlete...</option>
+            </select>
+            <div class="flex items-center space-x-2">
+              <input type="radio" id="customAthlete" name="athleteType" value="custom" class="text-[#5caa59]">
+              <label for="customAthlete" class="text-sm text-gray-700 dark:text-gray-300">Enter custom name</label>
+            </div>
+            <input type="text" id="customAthleteName" placeholder="Enter name..." disabled class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white disabled:opacity-50">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sport</label>
+          <select id="manualClub" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="Cycling">Cycling</option>
+            <option value="Running">Running</option>
+            <option value="Swimming">Swimming</option>
+            <option value="Walking">Walking</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Miles</label>
+          <input type="number" id="manualMiles" step="0.01" min="0" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Activity Name</label>
+          <input type="text" id="manualActivityName" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+          <input type="date" id="manualDate" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancelManualActivity" class="px-4 py-2 text-gray-600 dark:text-gray-400">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#5caa59] text-white rounded hover:bg-[#4a9447]">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminToolsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Admin Tools</h3>
+            <button id="closeAdminTools" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl">&times;</button>
+        </div>
+        
+        <div class="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+            <h4 class="font-semibold text-gray-800 dark:text-white mb-2">System Status</h4>
+            <div id="adminDebugContent" class="text-sm font-mono text-gray-600 dark:text-gray-300 whitespace-pre-wrap">Loading...</div>
+        </div>
+
+        <div>
+            <h4 class="font-semibold text-gray-800 dark:text-white mb-2">User Management</h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userListBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600 text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <footer class="bg-[#43464f] dark:bg-gray-800 text-white text-center py-4 mt-auto">
+    &copy; <span id="currentYear"></span> ADD COMPANY/CLUB NAME HERE
+  </footer>
+
+  <script>
+    // 1. GLOBAL VARIABLES
+    let data = [];
+    let is_admin = false;
+    let is_og_admin = false;
+
+    // 2. FETCH DATA ON LOAD
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/api/stats');
+        if (response.status === 401) {
+          window.location.href = '/login.html';
+          return;
+        }
+        const json = await response.json();
+
+        data = json.activities.map(act => ({
+            id: act.id,
+            Week: act.week_commencing,
+            Club: act.type, 
+            Athlete: act.athlete_name,
+            Miles: act.distance_miles,
+            'Activity Name': act.activity_name,
+            'Strava Link': act.strava_link,
+            'Manual Entry': act.manual_entry ? 'Yes' : 'No'
+        }));
+
+        is_admin = json.user.is_admin;
+        is_og_admin = json.user.is_og_admin;
+
+        // UI Initialization
+        if (is_admin) {
+           document.getElementById('exportExcel')?.classList.remove('hidden');
+           document.getElementById('addManualActivity')?.classList.remove('hidden');
+           document.querySelectorAll('.admin-col').forEach(el => el.classList.remove('hidden'));
+           initialiseManualActivityFeature();
+        }
+
+        if (is_og_admin) {
+           document.getElementById('forceSync')?.classList.remove('hidden');
+           document.getElementById('adminTools')?.classList.remove('hidden');
+           initialiseOGAdminFeatures();
+        }
+
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        populateYearFilter();
+        populateClubFilter();
+        onFilterChange();
+        
+        document.getElementById('month').addEventListener('change', onFilterChange);
+        document.getElementById('year').addEventListener('change', onFilterChange);
+        document.getElementById('club').addEventListener('change', onFilterChange);
+        document.getElementById('exportExcel').addEventListener('click', () => {
+          exportToExcel(filterData());
+        });
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          renderChart(filterData());
+        });
+
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+      }
+    });
+
+    // --- UTILS ---
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      const parts = dateStr.split('/');
+      if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      return new Date(dateStr);
+    }
+    function isValidUrl(url) {
+      try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; } catch { return false; }
+    }
+    
+    // --- FILTERS ---
+    function populateYearFilter() {
+      const years = new Set();
+      data.forEach(row => { const dt = parseDate(row.Week); if (dt) years.add(dt.getFullYear()); });
+      const yearSelect = document.getElementById('year');
+      yearSelect.innerHTML = '<option value="all">All</option>';
+      Array.from(years).sort((a,b) => b - a).forEach(y => {
+        const option = document.createElement('option');
+        option.value = y; option.textContent = y;
+        yearSelect.appendChild(option);
+      });
+      if (yearSelect.options.length > 1) yearSelect.value = yearSelect.options[1].value;
+    }
+    function populateClubFilter() {
+      const clubSet = new Set();
+      data.forEach(row => { if(row.Club) clubSet.add(row.Club); });
+      const clubSelect = document.getElementById('club');
+      clubSelect.innerHTML = '<option value="all">All</option>';
+      Array.from(clubSet).sort().forEach(club => {
+        const opt = document.createElement('option');
+        opt.value = club; opt.textContent = club;
+        clubSelect.appendChild(opt);
+      });
+    }
+    function filterData() {
+      const month = document.getElementById('month').value;
+      const year = document.getElementById('year').value;
+      const club = document.getElementById('club').value;
+      return data.filter(row => {
+        const dt = parseDate(row.Week);
+        if (!dt) return false;
+        if (year !== 'all' && dt.getFullYear().toString() !== year) return false;
+        if (month !== 'all' && (dt.getMonth() + 1).toString().padStart(2, '0') !== month) return false;
+        if (club !== 'all' && row.Club !== club) return false;
+        return true;
+      });
+    }
+
+    // --- RENDER ---
+    function renderTable(filtered) {
+      const tbody = document.getElementById('statsTableBody');
+      tbody.innerHTML = '';
+      filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-100 dark:hover:bg-gray-700';
+        
+        const cols = [row.Week, row.Club, row.Athlete, Number(row.Miles || 0).toFixed(2)];
+        cols.forEach((txt, i) => {
+            const td = document.createElement('td');
+            td.className = i===3 ? 'border border-[#43464f] dark:border-gray-600 px-3 py-1 text-right' : 'border border-[#43464f] dark:border-gray-600 px-3 py-1';
+            td.textContent = txt || '';
+            tr.appendChild(td);
+        });
+        
+        if (is_admin) {
+          const actTd = document.createElement('td');
+          actTd.className = 'border border-[#43464f] dark:border-gray-600 px-3 py-1';
+          actTd.textContent = row['Activity Name'] || '—';
+          tr.appendChild(actTd);
+
+          const linkTd = document.createElement('td');
+          linkTd.className = 'border border-[#43464f] dark:border-gray-600 px-3 py-1';
+          if (row['Strava Link'] && isValidUrl(row['Strava Link'])) {
+            const a = document.createElement('a');
+            a.href = row['Strava Link']; a.target = '_blank'; a.className = 'strava-link'; a.textContent = 'View';
+            linkTd.appendChild(a);
+          } else { linkTd.textContent = '—'; }
+          tr.appendChild(linkTd);
+          
+          const manTd = document.createElement('td');
+          manTd.className = 'border border-[#43464f] dark:border-gray-600 px-3 py-1 text-center';
+          
+          if (row['Manual Entry'] === 'Yes') {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-center gap-2';
+            
+            const txt = document.createElement('span');
+            txt.className = 'text-[#fc4c02] font-semibold';
+            txt.textContent = 'Yes';
+            div.appendChild(txt);
+
+            if (is_og_admin) {
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '🗑️';
+                delBtn.className = 'ml-2 hover:opacity-75';
+                delBtn.title = 'Delete Manual Activity';
+                delBtn.onclick = () => deleteActivity(row.id);
+                div.appendChild(delBtn);
+            }
+            manTd.appendChild(div);
+          } else {
+            manTd.textContent = 'No';
+            manTd.className += ' text-gray-500';
+          }
+          tr.appendChild(manTd);
+        }
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteActivity(id) {
+        if (!confirm('Are you sure you want to PERMANENTLY delete this manual activity?')) return;
+        try {
+            const res = await fetch('/api/manual-activity', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) { location.reload(); }
+            else { const err = await res.json(); alert('Error: ' + (err.error || 'Failed to delete')); }
+        } catch (e) { alert('Connection failed'); }
+    }
+
+    // --- TROPHIES ---
+    const trophyThresholds = {
+      'Walking': { platinum: 1000, gold: 800, silver: 500, bronze: 300 },
+      'Running': { platinum: 1000, gold: 500, silver: 350, bronze: 150 },
+      'Swimming': { platinum: 175, gold: 100, silver: 75, bronze: 30 },
+      'Cycling': { platinum: 3000, gold: 1000, silver: 500, bronze: 250 }
+    };
+    function getTrophyLevel(miles, sport) {
+      const thresholds = trophyThresholds[sport];
+      if (!thresholds) return null;
+      if (miles >= thresholds.platinum) return 'platinum';
+      if (miles >= thresholds.gold) return 'gold';
+      if (miles >= thresholds.silver) return 'silver';
+      if (miles >= thresholds.bronze) return 'bronze';
+      return null;
+    }
+    function getTrophyIcon(level) {
+      return { 'platinum': '💎', 'gold': '🥇', 'silver': '🥈', 'bronze': '🥉' }[level] || '';
+    }
+    function updateTrophySection(selectedClub) {
+        const sec = document.getElementById('trophySection');
+        if (selectedClub === 'all' || !trophyThresholds[selectedClub]) {
+            sec.classList.add('hidden');
+            return;
+        }
+        sec.classList.remove('hidden');
+        document.getElementById('trophyClubName').textContent = selectedClub;
+        const t = trophyThresholds[selectedClub];
+        document.getElementById('bronzeTarget').textContent = `${t.bronze} miles`;
+        document.getElementById('silverTarget').textContent = `${t.silver} miles`;
+        document.getElementById('goldTarget').textContent = `${t.gold} miles`;
+        document.getElementById('platinumTarget').textContent = `${t.platinum} miles`;
+        updateAthleteTrophyStatus(selectedClub);
+    }
+    function updateAthleteTrophyStatus(selectedClub) {
+        const statusContainer = document.getElementById('athleteTrophyStatus');
+        statusContainer.innerHTML = ''; 
+        const currentYear = document.getElementById('year').value === 'all' ? new Date().getFullYear().toString() : document.getElementById('year').value;
+        const sums = {};
+        data.forEach(r => {
+            if (r.Club === selectedClub) {
+               const y = parseDate(r.Week).getFullYear().toString();
+               if (y === currentYear) { sums[r.Athlete] = (sums[r.Athlete] || 0) + Number(r.Miles); }
+            }
+        });
+        const sorted = Object.entries(sums).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        if (sorted.length === 0) { statusContainer.innerHTML = '<p class="text-gray-500 text-center">No activity found.</p>'; return; }
+        const thresholds = trophyThresholds[selectedClub];
+        sorted.forEach(([athlete, miles]) => {
+            const level = getTrophyLevel(miles, selectedClub);
+            const icon = getTrophyIcon(level);
+            let nextTarget = thresholds.bronze;
+            let barColor = 'progress-toward-bronze';
+            if (level === 'bronze') { nextTarget = thresholds.silver; barColor = 'progress-bronze'; }
+            if (level === 'silver') { nextTarget = thresholds.gold; barColor = 'progress-silver'; }
+            if (level === 'gold') { nextTarget = thresholds.platinum; barColor = 'progress-gold'; }
+            if (level === 'platinum') { nextTarget = miles; barColor = 'progress-platinum'; }
+            const pct = Math.min((miles / nextTarget) * 100, 100);
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2';
+            row.innerHTML = `
+                <div class="flex-1">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-medium text-gray-800 dark:text-white">${athlete}</span>
+                        <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">${miles.toFixed(1)} miles ${icon}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                        <div class="${barColor} h-2 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+            `;
+            statusContainer.appendChild(row);
+        });
+    }
+
+    // --- CHART & EXCEL ---
+    let chartInstance = null;
+    function renderChart(filtered) {
+      const ctx = document.getElementById('statsChart').getContext('2d');
+      const athleteSportSummary = {};
+      const sports = new Set();
+      filtered.forEach(row => {
+        const ath = row.Athlete; const spt = row.Club; const mi = Number(row.Miles);
+        if (!athleteSportSummary[ath]) athleteSportSummary[ath] = {};
+        athleteSportSummary[ath][spt] = (athleteSportSummary[ath][spt] || 0) + mi;
+        sports.add(spt);
+      });
+      const athletes = Object.keys(athleteSportSummary);
+      const sportsArray = Array.from(sports).sort();
+      const colors = { 'Cycling': 'rgba(255, 99, 132, 0.8)', 'Running': 'rgba(54, 162, 235, 0.8)', 'Swimming': 'rgba(75, 192, 192, 0.8)', 'Walking': 'rgba(153, 102, 255, 0.8)' };
+      const fallback = ['rgba(255, 159, 64, 0.8)', 'rgba(199, 199, 199, 0.8)'];
+      const datasets = sportsArray.map((s, i) => ({
+        label: s, data: athletes.map(a => athleteSportSummary[a][s] || 0),
+        backgroundColor: colors[s] || fallback[i % fallback.length], borderWidth: 1
+      }));
+      if (chartInstance) chartInstance.destroy();
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      chartInstance = new Chart(ctx, {
+        type: 'bar', data: { labels: athletes, datasets: datasets },
+        options: {
+          responsive: true,
+          scales: { x: { stacked: true, ticks: { color: isDark ? '#e5e7eb' : '#374151' } }, y: { stacked: true, beginAtZero: true, ticks: { color: isDark ? '#e5e7eb' : '#374151' } } },
+          plugins: { legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } } }
+        }
+      });
+    }
+    function exportToExcel(filtered) {
+      const data = [['Week', 'Club', 'Athlete', 'Miles', 'Activity', 'Link', 'Manual'], 
+      ...filtered.map(r => [r.Week, r.Club, r.Athlete, r.Miles, r['Activity Name'], r['Strava Link'], r['Manual Entry']])];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Activities");
+      XLSX.writeFile(wb, `Stats_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+    function onFilterChange() {
+      const f = filterData();
+      renderTable(f); renderChart(f); updateTrophySection(document.getElementById('club').value);
+    }
+
+    // --- MANUAL ACTIVITY LOGIC ---
+    function initialiseManualActivityFeature() {
+      const modal = document.getElementById('manualActivityModal');
+      const form = document.getElementById('manualActivityForm');
+      loadAthletes();
+      document.getElementById('manualDate').valueAsDate = new Date();
+      
+      const existingRadio = document.getElementById('existingAthlete');
+      const customRadio = document.getElementById('customAthlete');
+      const sel = document.getElementById('manualAthlete');
+      const inp = document.getElementById('customAthleteName');
+      
+      existingRadio.addEventListener('change', () => { if(existingRadio.checked) { sel.disabled = false; inp.disabled = true; inp.value = ''; } });
+      customRadio.addEventListener('change', () => { if(customRadio.checked) { inp.disabled = false; sel.disabled = true; sel.value = ''; } });
+
+      document.getElementById('addManualActivity').addEventListener('click', () => modal.classList.remove('hidden'));
+      document.getElementById('cancelManualActivity').addEventListener('click', () => { modal.classList.add('hidden'); form.reset(); existingRadio.click(); });
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = existingRadio.checked ? sel.value : inp.value.trim();
+        if(!name) return alert('Enter a name');
+        try {
+            const res = await fetch('/api/manual-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    athlete_name: name, club: document.getElementById('manualClub').value,
+                    miles: document.getElementById('manualMiles').value, activity_name: document.getElementById('manualActivityName').value,
+                    date: document.getElementById('manualDate').value
+                })
+            });
+            if(res.ok) { location.reload(); } else { alert('Error adding activity'); }
+        } catch(e) { console.error(e); }
+      });
+    }
+    function loadAthletes() {
+        if (data.length > 0) {
+            const unique = [...new Set(data.map(i => i.Athlete))].sort();
+            const sel = document.getElementById('manualAthlete');
+            sel.innerHTML = '<option value="">Select athlete...</option>';
+            unique.forEach(a => { const opt = document.createElement('option'); opt.value = a; opt.textContent = a; sel.appendChild(opt); });
+        }
+    }
+
+    // --- OG ADMIN TOOLS (UPDATED WITH MODAL) ---
+    function initialiseOGAdminFeatures() {
+      document.getElementById('forceSync').addEventListener('click', async () => {
+          if(!confirm('Force Sync?')) return;
+          try { const res = await fetch('/api/force-sync'); const j = await res.json(); alert(j.message); } catch(e) { alert('Sync Failed'); }
+      });
+      
+      // ADMIN MODAL LOGIC
+      const modal = document.getElementById('adminToolsModal');
+      const closeBtn = document.getElementById('closeAdminTools');
+      
+      document.getElementById('adminTools').addEventListener('click', async () => {
+          modal.classList.remove('hidden');
+          // Fetch Info
+          const res = await fetch('/api/admin/debug-info');
+          const d = await res.json();
+          const info = `Status: ${d.status}\nLast Sync: ${d.last_sync}\n\nDB Users: ${d.database.users}\nDB Activities: ${d.database.total_activities}`;
+          document.getElementById('adminDebugContent').textContent = info;
+          
+          // Fetch User List
+          loadUserList();
+      });
+      
+      closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    }
+
+    async function loadUserList() {
+        const tbody = document.getElementById('userListBody');
+        tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-2 text-center text-gray-500">Loading...</td></tr>';
+        
+        try {
+            const res = await fetch('/api/admin/users');
+            if(!res.ok) throw new Error();
+            const json = await res.json();
+            const users = json.users;
+            
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                // Role badge
+                let role = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">User</span>';
+                if (u.is_og_admin) role = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">OG Admin</span>';
+                else if (u.is_admin) role = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Admin</span>';
+                
+                tr.innerHTML = `
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-gray-200">${u.firstname} ${u.lastname}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${u.athlete_id}</td>
+                    <td class="px-3 py-2 whitespace-nowrap">${role}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-right">
+                        <button onclick="deleteUser('${u.athlete_id}', '${u.firstname}')" class="text-red-600 hover:text-red-900 dark:hover:text-red-400 font-bold" title="Delete User">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-2 text-center text-red-500">Failed to load users</td></tr>';
+        }
+    }
+
+    // Global scope so onclick works
+    window.deleteUser = async function(id, name) {
+        if(!confirm(`WARNING: Are you sure you want to delete ${name}?\n\nThis will PERMANENTLY delete the user and ALL their activity history.\n\nThis cannot be undone.`)) return;
+        
+        try {
+            const res = await fetch('/api/user', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            
+            if(res.ok) {
+                loadUserList(); // Refresh table
+            } else {
+                const j = await res.json();
+                alert('Error: ' + j.error);
+            }
+        } catch(e) {
+            alert('Failed to connect to server');
+        }
+    }
+  </script>
+</body>
+</html>
